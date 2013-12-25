@@ -4,38 +4,38 @@ var Server = require('mongodb').Server;
 var BSON = require('mongodb').BSON;
 var ObjectID = require('mongodb').ObjectID;
 
-ArticleProvider = function(host, port) {
+ArticleProvider = function (host, port) {
   var server = new Server(host, port, {auto_reconnect: true}, {});
   this.db = new Db('node-mongo-blog', server, {safe: false});
   this.db.open(function() {});
 };
 
-ArticleProvider.prototype.getCollection = function(callback) {
+ArticleProvider.prototype.getCollection = function (callback) {
   this.db.collection('articles', callback);
 };
 
-ArticleProvider.prototype.findAll = function(callback) {
-  this.getCollection(function(error, article_collection) {
+ArticleProvider.prototype.findAll = function (callback) {
+  this.getCollection(function(error, articleCollection) {
     if (error) callback(error);
     else {
-      article_collection.find().toArray(callback);
+      articleCollection.find().toArray(callback);
     }
   });
 };
 
 
-ArticleProvider.prototype.findById = function(id, callback) {
-  this.getCollection(function(error, article_collection) {
+ArticleProvider.prototype.findById = function (id, callback) {
+  this.getCollection(function(error, articleCollection) {
     if (error) callback(error);
     else {
-      var objectId = article_collection.db.bson_serializer.ObjectID.createFromHexString(id);
-      article_collection.findOne({_id: objectId}, callback);
+      var objectId = articleCollection.db.bson_serializer.ObjectID.createFromHexString(id);
+      articleCollection.findOne({_id: objectId}, callback);
     }
   });
 };
 
-ArticleProvider.prototype.save = function(articles, callback) {
-  this.getCollection(function(error, article_collection) {
+ArticleProvider.prototype.save = function (articles, callback) {
+  this.getCollection(function(error, articleCollection) {
     if (error) callback(error);
     else {
       if (typeof(articles.length) == "undefined")
@@ -50,7 +50,19 @@ ArticleProvider.prototype.save = function(articles, callback) {
         }
       }
 
-      article_collection.insert(articles, callback);
+      articleCollection.insert(articles, callback);
+    }
+  });
+};
+
+ArticleProvider.prototype.addCommentToArticle = function (articleId, comment, callback) {
+  this.getCollection(function (error, articleCollection) {
+    if (error) callback(error);
+    else {
+      var objectId = articleCollection.db.bson_serializer.ObjectID.createFromHexString(articleId);
+      articleCollection.update(
+        {_id: objectId},
+        {"$push": {comments: comment}}, callback);
     }
   });
 };
