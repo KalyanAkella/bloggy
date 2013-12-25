@@ -6,7 +6,7 @@
 var express = require('express');
 var http = require('http');
 var path = require('path');
-var ArticleProvider = require('./articleprovider-memory').ArticleProvider;
+var ArticleProvider = require('./articleprovider-mongodb').ArticleProvider;
 
 var app = express();
 
@@ -28,7 +28,7 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 }
 
-var articleProvider = new ArticleProvider();
+var articleProvider = new ArticleProvider('localhost', 27017);
 
 app.get('/', function(req, res) {
   articleProvider.findAll(function(error, docs) {
@@ -51,6 +51,15 @@ app.post('/blog/new', function (req, res) {
     body: req.param('body')
   }, function (error, docs) {
     res.redirect('/');
+  });
+});
+
+app.get('/blog/:id', function (req, res) {
+  articleProvider.findById(req.params.id, function (error, article) {
+    res.render('blog_show.jade', {
+      title: article.title,
+      body: article.body
+    });
   });
 });
 
